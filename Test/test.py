@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import pygame
 import threading
 import time
@@ -32,10 +34,13 @@ class Walker:
 
 	def update_frame(self):
 		self.in_frame_counter += 1
-		if self.in_frame_counter >= self.frame_limit:
-			self.frame_cont = (self.frame_cont + 1) % len(self.frames)
+		if self.x == self.dest_x and self.y == self.dest_y:
+			self.image, self.rectangle = load_image(self.idle_frame_name)
+		else:
+			if self.in_frame_counter >= self.frame_limit:
+				self.frame_cont = (self.frame_cont + 1) % len(self.frames)
+				self.in_frame_counter = 0
 			self.image, self.rectangle = load_image(self.frames[self.frame_cont])
-			self.in_frame_counter = 0
 
 	def draw(self):
 		self.rectangle.x = int(self.x)
@@ -90,7 +95,6 @@ if __name__ in "__main__":
 				my_walker.dest_x = my_walker.dest_x - int(87 // 2)
 				my_walker.dest_y = my_walker.dest_y - int(125 // 2)
 		if loopit:
-			print("loop")
 			SCREEN.fill((0, 0, 0))
 			my_walker.move_towards_dest()
 			my_walker.draw()
