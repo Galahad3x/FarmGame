@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
 import pygame
-import threading
-import time
 import sys
 
 pygame.init()
@@ -13,13 +11,6 @@ SIZE = WIDTH, HEIGHT = 800, 600
 
 SCREEN = pygame.display.set_mode(SIZE)
 pygame.display.set_caption("FarmGame")
-
-
-def call_loop():
-	global loopit, loopit_alive
-	while loopit_alive:
-		loopit = True
-		time.sleep(1 / UPDATES_PER_SEC)
 
 
 def load_image(image_name):
@@ -72,21 +63,19 @@ class Walker:
 	def __init__(self):
 		self.x, self.y = 0, 0
 		self.dest_x, self.dest_y = 0, 0
-		self.idle_frame_name = "../Assets/stick0.jpg"
+		self.idle_frame_name = "../assets/stick0.jpg"
 		self.frame_cont = 0
 		self.in_frame_counter = 0
 		self.frame_limit = 7
-		self.frames = ["../Assets/stick1.jpg", "../Assets/stick2.jpg", "../Assets/stick3.jpg", "../Assets/stick2.jpg"]
+		self.frames = ["../assets/stick1.jpg", "../assets/stick2.jpg", "../assets/stick3.jpg", "../assets/stick2.jpg"]
 		self.image, self.rectangle = load_image(self.frames[self.frame_cont])
 
 
 if __name__ in "__main__":
-	loopit = True
-	loopit_alive = True
-	loopit_thread = threading.Thread(target=call_loop, args=[], daemon=True)
-	loopit_thread.start()
 	my_walker = Walker()
+	clock = pygame.time.Clock()
 	while True:
+		clock.tick(30)
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				sys.exit()
@@ -94,10 +83,9 @@ if __name__ in "__main__":
 				my_walker.dest_x, my_walker.dest_y = [int(c) for c in pygame.mouse.get_pos()]
 				my_walker.dest_x = my_walker.dest_x - int(87 // 2)
 				my_walker.dest_y = my_walker.dest_y - int(125 // 2)
-		if loopit:
-			SCREEN.fill((0, 0, 0))
-			my_walker.move_towards_dest()
-			my_walker.draw()
-			my_walker.update_frame()
-			pygame.display.flip()
-			loopit = False
+		SCREEN.fill((0, 0, 0))
+		my_walker.move_towards_dest()
+		my_walker.draw()
+		my_walker.update_frame()
+		pygame.draw.aaline(SCREEN, (100, 100, 255), (400, -100), (-100, 800), 101)
+		pygame.display.flip()
