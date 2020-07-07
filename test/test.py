@@ -4,10 +4,12 @@ import pygame
 import sys
 
 pygame.init()
+print("\r\r")
 
 UPDATES_PER_SEC = 30
+BLOCK_SIZE = 40
 
-SIZE = WIDTH, HEIGHT = 800, 600
+SIZE = WIDTH, HEIGHT = 1280, 768
 
 SCREEN = pygame.display.set_mode(SIZE)
 pygame.display.set_caption("FarmGame")
@@ -71,8 +73,51 @@ class Walker:
 		self.image, self.rectangle = load_image(self.frames[self.frame_cont])
 
 
+class Tile:
+	def __init__(self, top_left, top_right, bottom_left, bottom_right):
+		self.top_left = top_left
+		self.top_right = top_right
+		self.bottom_left = bottom_left
+		self.bottom_right = bottom_right
+		self.color = (100, 100, 255)
+
+	def draw(self):
+		pygame.draw.aaline(SCREEN, self.color, self.top_left, self.bottom_left, 100)
+		pygame.draw.aaline(SCREEN, self.color, self.top_left, self.top_right, 100)
+		pygame.draw.aaline(SCREEN, self.color, self.bottom_right, self.top_right, 100)
+		pygame.draw.aaline(SCREEN, self.color, self.bottom_right, self.bottom_left, 100)
+
+	def collides(self, other_coords):
+		ox = other_coords[0]
+		oy = other_coords[1]
+		if ox < self.bottom_left[0] or ox >= self.top_right[0]:
+			return False
+		if oy >= self.bottom_right[1] or oy < self.top_left[1]:
+			return False
+		if ox < self.top_left[0]:
+			if oy >= self.bottom_left[1]:
+				return (oy - self.bottom_left[1]) < (ox - self.bottom_left[0]) * 0.666
+			else:
+				return (oy - self.bottom_left[1]) >= (ox - self.bottom_left[0]) * -0.4
+		elif ox < self.bottom_right[0]:
+			if oy >= self.bottom_left[1] and oy >= self.top_right[1]:
+				return True
+			elif oy < self.bottom_left[1]:
+				return (oy - self.bottom_left[1]) >= (ox - self.bottom_left[0]) * -0.4
+			else:
+				return (oy - self.top_right[1]) < (ox - self.top_left[0]) * -0.4
+		else:
+			if oy >= self.top_right[1]:
+				return (oy - self.top_right[1]) < (ox - self.top_left[0]) * -0.4
+			else:
+				return (oy - self.bottom_right[1]) >= (ox - self.bottom_right[0]) * 0.666
+
+
 if __name__ in "__main__":
 	my_walker = Walker()
+	my_tile = Tile((500, 50), (500 + 5 * BLOCK_SIZE, 50 + 2 * BLOCK_SIZE), (500 - 3 * BLOCK_SIZE, 50 + 2 * BLOCK_SIZE),
+	               (500 + 2 * BLOCK_SIZE, 50 + 4 * BLOCK_SIZE))
+	tiles = [my_tile]
 	clock = pygame.time.Clock()
 	while True:
 		clock.tick(30)
@@ -87,5 +132,9 @@ if __name__ in "__main__":
 		my_walker.move_towards_dest()
 		my_walker.draw()
 		my_walker.update_frame()
-		pygame.draw.aaline(SCREEN, (100, 100, 255), (400, -100), (-100, 800), 101)
+		my_tile.draw()
+		if my_tile.collides([int(c) for c in pygame.mouse.get_pos()]):
+			print("\rCollides")
+		else:
+			print("\rDoesnt")
 		pygame.display.flip()
