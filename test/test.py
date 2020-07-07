@@ -96,7 +96,7 @@ class Tile:
 			return False
 		if ox < self.top_left[0]:
 			if oy >= self.bottom_left[1]:
-				return (oy - self.bottom_left[1]) < (ox - self.bottom_left[0]) * 0.666
+				return (oy - self.bottom_left[1]) < (ox - self.bottom_left[0]) * 0.666666666
 			else:
 				return (oy - self.bottom_left[1]) >= (ox - self.bottom_left[0]) * -0.4
 		elif ox < self.bottom_right[0]:
@@ -108,9 +108,9 @@ class Tile:
 				return (oy - self.top_right[1]) < (ox - self.top_left[0]) * -0.4
 		else:
 			if oy >= self.top_right[1]:
-				return (oy - self.top_right[1]) < (ox - self.top_left[0]) * -0.4
+				return (oy - self.top_right[1]) >= (ox - self.top_left[0]) * -0.4
 			else:
-				return (oy - self.bottom_right[1]) >= (ox - self.bottom_right[0]) * 0.666
+				return (oy - self.top_right[1]) < (ox - self.bottom_right[0]) * 0.666666666
 
 
 if __name__ in "__main__":
@@ -128,13 +128,15 @@ if __name__ in "__main__":
 				my_walker.dest_x, my_walker.dest_y = [int(c) for c in pygame.mouse.get_pos()]
 				my_walker.dest_x = my_walker.dest_x - int(87 // 2)
 				my_walker.dest_y = my_walker.dest_y - int(125 // 2)
-		SCREEN.fill((0, 0, 0))
+		# SCREEN.fill((0, 0, 0))
 		my_walker.move_towards_dest()
 		my_walker.draw()
 		my_walker.update_frame()
 		my_tile.draw()
 		if my_tile.collides([int(c) for c in pygame.mouse.get_pos()]):
 			print("\rCollides")
+			pygame.draw.circle(SCREEN, (0, 255, 0), tuple([int(c) for c in pygame.mouse.get_pos()]), 3)
 		else:
 			print("\rDoesnt")
+			pygame.draw.circle(SCREEN, (255, 0, 0), tuple([int(c) for c in pygame.mouse.get_pos()]), 3)
 		pygame.display.flip()
