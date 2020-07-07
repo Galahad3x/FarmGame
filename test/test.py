@@ -96,30 +96,27 @@ class Tile:
 			return False
 		if ox < self.top_left[0]:
 			if oy >= self.bottom_left[1]:
-				print("Up if")
 				return (oy - self.bottom_left[1]) < (ox - self.bottom_left[0]) * 0.4
 			else:
-				print("Down if")
-				print(oy, self.bottom_left[1], ox, self.bottom_left[0], (ox - self.bottom_left[0]) * -0.4)
-				print((oy - self.bottom_left[1]), (ox - self.bottom_left[0]) * -0.67)
-				return (oy - self.bottom_left[1]) >= (ox - self.bottom_left[0]) * -0.67
+				return (oy - self.bottom_left[1]) >= (ox - self.bottom_left[0]) * -0.666
 		elif ox < self.bottom_right[0]:
 			if oy >= self.bottom_left[1] and oy >= self.top_right[1]:
 				return True
 			elif oy < self.bottom_left[1]:
-				return (oy - self.bottom_left[1]) >= (ox - self.bottom_left[0]) * -0.4
+				return (oy - self.bottom_left[1]) < (ox - self.bottom_left[0]) * 0.4
 			else:
-				return (oy - self.top_right[1]) < (ox - self.top_left[0]) * -0.4
+				return (oy - self.top_right[1]) >= (ox - self.top_left[0]) * 0.4
 		else:
 			if oy >= self.top_right[1]:
-				return (oy - self.top_right[1]) >= (ox - self.top_left[0]) * -0.4
+				return (oy - self.top_right[1]) < (ox - self.top_right[0]) * -0.666
 			else:
-				return (oy - self.top_right[1]) < (ox - self.bottom_right[0]) * 0.67
+				return (oy - self.top_right[1]) >= (ox - self.top_right[0]) * 0.4
 
 
 if __name__ in "__main__":
 	my_walker = Walker()
-	my_tile = Tile((500, 50), (int(500 + 3.6 * BLOCK_SIZE), 50 + 2 * BLOCK_SIZE), (500 - 3 * BLOCK_SIZE, 50 + 2 * BLOCK_SIZE),
+	my_tile = Tile((500, 50), (int(500 + 3.6 * BLOCK_SIZE), 50 + 2 * BLOCK_SIZE),
+	               (500 - 3 * BLOCK_SIZE, 50 + 2 * BLOCK_SIZE),
 	               (int(500 + 0.8 * BLOCK_SIZE), 50 + 4 * BLOCK_SIZE))
 	tiles = [my_tile]
 	clock = pygame.time.Clock()
