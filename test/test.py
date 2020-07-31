@@ -17,7 +17,7 @@ pygame.display.set_caption("FarmGame")
 
 def load_image(image_name):
 	image = pygame.image.load(image_name)
-	image = pygame.transform.scale(image, (85, 137))
+	image = pygame.transform.scale(image, (BLOCK_SIZE*6, BLOCK_SIZE*6))
 	rectangle = image.get_rect()
 	return image, rectangle
 
@@ -79,7 +79,14 @@ class Tile:
 		self.top_right = top_right
 		self.bottom_left = bottom_left
 		self.bottom_right = bottom_right
+		self.sprite_point = bottom_left[0], bottom_left[1] - BLOCK_SIZE*4
+		self.image, self.rectangle = load_image("../assets/riu/1_1.png")
 		self.color = (100, 100, 255)
+
+	def draw_sprite(self):
+		self.rectangle.x = self.sprite_point[0]
+		self.rectangle.y = self.sprite_point[1]
+		SCREEN.blit(self.image, self.rectangle)
 
 	def draw(self):
 		pygame.draw.aaline(SCREEN, self.color, self.top_left, self.bottom_left, 100)
@@ -96,44 +103,56 @@ class Tile:
 			return False
 		if ox < self.top_left[0]:
 			if oy >= self.bottom_left[1]:
-				return (oy - self.bottom_left[1]) < (ox - self.bottom_left[0]) * 0.4
+				return (oy - self.bottom_left[1]) < (ox - self.bottom_left[0]) * 0.666
 			else:
 				return (oy - self.bottom_left[1]) >= (ox - self.bottom_left[0]) * -0.666
 		elif ox < self.bottom_right[0]:
 			if oy >= self.bottom_left[1] and oy >= self.top_right[1]:
 				return True
 			elif oy < self.bottom_left[1]:
-				return (oy - self.bottom_left[1]) < (ox - self.bottom_left[0]) * 0.4
+				return (oy - self.bottom_left[1]) < (ox - self.bottom_left[0]) * 0.666
 			else:
-				return (oy - self.top_right[1]) >= (ox - self.top_left[0]) * 0.4
+				return (oy - self.top_right[1]) >= (ox - self.top_left[0]) * 0.666
 		else:
 			if oy >= self.top_right[1]:
 				return (oy - self.top_right[1]) < (ox - self.top_right[0]) * -0.666
 			else:
-				return (oy - self.top_right[1]) >= (ox - self.top_right[0]) * 0.4
+				return (oy - self.top_right[1]) >= (ox - self.top_right[0]) * 0.666
+
+
+class AdvancedTile:
+	def __init__(self, top_tile, bottom_tile):
+		self.top_tile = top_tile
+		self.bottom_tile = bottom_tile
+
+	def collides(self, other_coords):
+		if self.bottom_tile.collides(other_coords) or self.top_tile.collides(other_coords):
+			return True
+		else:
+			if self.top_tile.bottom_left[0] <= other_coords[0] < self.top_tile.top_right[0]:
+				return self.top_tile.bottom_left[1] <= other_coords[1] < self.bottom_tile.bottom_left[1]
+			return False
+
+	def draw(self):
+		self.top_tile.draw()
+		self.bottom_tile.draw()
 
 
 if __name__ in "__main__":
-	my_walker = Walker()
-	my_tile = Tile((500, 50), (int(500 + 3.6 * BLOCK_SIZE), 50 + 2 * BLOCK_SIZE),
+	my_tile = Tile((500, 50), (int(500 + 3 * BLOCK_SIZE), 50 + 2 * BLOCK_SIZE),
 	               (500 - 3 * BLOCK_SIZE, 50 + 2 * BLOCK_SIZE),
-	               (int(500 + 0.8 * BLOCK_SIZE), 50 + 4 * BLOCK_SIZE))
-	tiles = [my_tile]
+	               (int(500), 50 + 4 * BLOCK_SIZE))
+	my_tile_2 = Tile((500, 50 + BLOCK_SIZE*2), (int(500 + 3 * BLOCK_SIZE), 50 + BLOCK_SIZE*2 + 2 * BLOCK_SIZE),
+	               (500 - 3 * BLOCK_SIZE, 50 + BLOCK_SIZE*2 + 2 * BLOCK_SIZE),
+	               (int(500), 50 + BLOCK_SIZE*2 + 4 * BLOCK_SIZE))
+	my_advanced = AdvancedTile(my_tile, my_tile_2)
 	clock = pygame.time.Clock()
 	while True:
 		clock.tick(30)
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				sys.exit()
-			elif event.type == pygame.MOUSEBUTTONUP:
-				my_walker.dest_x, my_walker.dest_y = [int(c) for c in pygame.mouse.get_pos()]
-				my_walker.dest_x = my_walker.dest_x - int(87 // 2)
-				my_walker.dest_y = my_walker.dest_y - int(125 // 2)
-		# SCREEN.fill((0, 0, 0))
-		my_walker.move_towards_dest()
-		my_walker.draw()
-		my_walker.update_frame()
-		my_tile.draw()
+		my_tile.draw_sprite()
 		if my_tile.collides([int(c) for c in pygame.mouse.get_pos()]):
 			pygame.draw.circle(SCREEN, (0, 255, 0), tuple([int(c) for c in pygame.mouse.get_pos()]), 3)
 		else:
