@@ -124,6 +124,7 @@ class AdvancedTile:
 	def __init__(self, top_tile, bottom_tile):
 		self.top_tile = top_tile
 		self.bottom_tile = bottom_tile
+		self.bottom_tile.image, self.bottom_tile.rectangle = load_image("../assets/carretera/1.png")
 
 	def collides(self, other_coords):
 		if self.bottom_tile.collides(other_coords) or self.top_tile.collides(other_coords):
@@ -136,6 +137,9 @@ class AdvancedTile:
 	def draw(self):
 		self.top_tile.draw()
 		self.bottom_tile.draw()
+
+	def draw_sprite(self):
+		self.bottom_tile.draw_sprite()
 
 
 if __name__ in "__main__":
@@ -152,8 +156,8 @@ if __name__ in "__main__":
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				sys.exit()
-		my_tile.draw_sprite()
-		if my_tile.collides([int(c) for c in pygame.mouse.get_pos()]):
+		my_advanced.draw_sprite()
+		if my_advanced.collides([int(c) for c in pygame.mouse.get_pos()]):
 			pygame.draw.circle(SCREEN, (0, 255, 0), tuple([int(c) for c in pygame.mouse.get_pos()]), 3)
 		else:
 			pygame.draw.circle(SCREEN, (255, 0, 0), tuple([int(c) for c in pygame.mouse.get_pos()]), 3)
