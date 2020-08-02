@@ -6,6 +6,16 @@ import sys
 pygame.init()
 print("\r\r")
 
+GRASS = 0
+RIVER = 1
+ROAD = 2
+
+SPRITE_DICT = {
+	GRASS: "../assets/gespa/1.png",
+	RIVER: "../assets/riu/1_1.png",
+	ROAD: "../assets/carretera/1.png"
+}
+
 UPDATES_PER_SEC = 30
 BLOCK_SIZE = 40
 
@@ -17,9 +27,13 @@ pygame.display.set_caption("FarmGame")
 
 def load_image(image_name):
 	image = pygame.image.load(image_name)
-	image = pygame.transform.scale(image, (BLOCK_SIZE*6, BLOCK_SIZE*6))
+	image = pygame.transform.scale(image, (BLOCK_SIZE * 6 + 7, BLOCK_SIZE * 6 + 7))
 	rectangle = image.get_rect()
 	return image, rectangle
+
+
+def find_image(type_of_tile):
+	return load_image(SPRITE_DICT[type_of_tile])
 
 
 class Walker:
@@ -74,13 +88,13 @@ class Walker:
 
 
 class Tile:
-	def __init__(self, top_left, top_right, bottom_left, bottom_right):
+	def __init__(self, top_left, type_of_tile):
 		self.top_left = top_left
-		self.top_right = top_right
-		self.bottom_left = bottom_left
-		self.bottom_right = bottom_right
-		self.sprite_point = bottom_left[0], bottom_left[1] - BLOCK_SIZE*4
-		self.image, self.rectangle = load_image("../assets/riu/1_1.png")
+		self.top_right = top_left[0] + 3 * BLOCK_SIZE, top_left[1] + 2 * BLOCK_SIZE
+		self.bottom_left = top_left[0] - 3 * BLOCK_SIZE, top_left[1] + 2 * BLOCK_SIZE
+		self.bottom_right = top_left[0], top_left[1] + 4 * BLOCK_SIZE
+		self.sprite_point = self.bottom_left[0], self.bottom_left[1] - BLOCK_SIZE * 4
+		self.image, self.rectangle = find_image(type_of_tile)
 		self.color = (100, 100, 255)
 
 	def draw_sprite(self):
@@ -142,23 +156,59 @@ class AdvancedTile:
 		self.bottom_tile.draw_sprite()
 
 
+class Map:
+	def __init__(self, map_table):
+		self.map_table = map_table
+		self.tile_table = self.update_table()
+
+	def update_table(self):
+		tile_tab = []
+		for i, line in enumerate(self.map_table):
+			tile_line = []
+			if i % 2 == 0:
+				x_offset = 3 * BLOCK_SIZE
+			else:
+				x_offset = 0
+			for j, elem in enumerate(line):
+				tile_line.append(Tile(((j * 6 * BLOCK_SIZE) + x_offset, i * 2 * BLOCK_SIZE), elem))
+			tile_tab.append(tile_line)
+		return tile_tab
+
+	def draw_on_screen(self):
+		SCREEN.fill((72, 255, 59))
+		self.tile_table = self.update_table()
+		for line in self.tile_table:
+			for tile in line:
+				tile.draw_sprite()
+
+
 if __name__ in "__main__":
-	my_tile = Tile((500, 50), (int(500 + 3 * BLOCK_SIZE), 50 + 2 * BLOCK_SIZE),
-	               (500 - 3 * BLOCK_SIZE, 50 + 2 * BLOCK_SIZE),
-	               (int(500), 50 + 4 * BLOCK_SIZE))
-	my_tile_2 = Tile((500, 50 + BLOCK_SIZE*2), (int(500 + 3 * BLOCK_SIZE), 50 + BLOCK_SIZE*2 + 2 * BLOCK_SIZE),
-	               (500 - 3 * BLOCK_SIZE, 50 + BLOCK_SIZE*2 + 2 * BLOCK_SIZE),
-	               (int(500), 50 + BLOCK_SIZE*2 + 4 * BLOCK_SIZE))
-	my_advanced = AdvancedTile(my_tile, my_tile_2)
 	clock = pygame.time.Clock()
+	my_map = Map([[]])
+	my_map.map_table = [[GRASS, GRASS, RIVER, RIVER, GRASS, GRASS, GRASS],
+	                    [GRASS, GRASS, RIVER, RIVER, GRASS, GRASS, GRASS],
+	                    [GRASS, RIVER, RIVER, GRASS, GRASS, GRASS, GRASS],
+	                    [GRASS, RIVER, RIVER, GRASS, GRASS, GRASS, GRASS],
+	                    [RIVER, RIVER, GRASS, GRASS, GRASS, GRASS, GRASS],
+	                    [RIVER, RIVER, GRASS, GRASS, GRASS, GRASS, GRASS],
+	                    [RIVER, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
+	                    [RIVER, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
+	                    [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
+	                    [ROAD, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
+	                    [ROAD, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS],
+	                    [GRASS, ROAD, GRASS, GRASS, GRASS, GRASS, GRASS],
+	                    [GRASS, ROAD, GRASS, GRASS, GRASS, GRASS, GRASS],
+	                    [GRASS, GRASS, ROAD, GRASS, GRASS, GRASS, GRASS],
+	                    [GRASS, GRASS, ROAD, GRASS, GRASS, GRASS, GRASS],
+	                    [GRASS, GRASS, GRASS, ROAD, GRASS, GRASS, GRASS],
+	                    [GRASS, GRASS, GRASS, ROAD, GRASS, GRASS, GRASS],
+	                    [GRASS, GRASS, GRASS, GRASS, ROAD, GRASS, GRASS],
+	                    [GRASS, GRASS, GRASS, GRASS, ROAD, GRASS, GRASS],
+	                    [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS]]
 	while True:
 		clock.tick(30)
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				sys.exit()
-		my_advanced.draw_sprite()
-		if my_advanced.collides([int(c) for c in pygame.mouse.get_pos()]):
-			pygame.draw.circle(SCREEN, (0, 255, 0), tuple([int(c) for c in pygame.mouse.get_pos()]), 3)
-		else:
-			pygame.draw.circle(SCREEN, (255, 0, 0), tuple([int(c) for c in pygame.mouse.get_pos()]), 3)
+		my_map.draw_on_screen()
 		pygame.display.flip()
