@@ -6,6 +6,11 @@ import sys
 pygame.init()
 print("\r\r")
 
+VIEW_X = 100
+VIEW_Y = 100
+
+pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP])
+
 GRASS = 0
 RIVER = 1
 ROAD = 2
@@ -16,8 +21,10 @@ SPRITE_DICT = {
 	ROAD: "../assets/carretera/1.png"
 }
 
+BACKGROUND_COLOR = (32, 215, 19)
+
 UPDATES_PER_SEC = 30
-BLOCK_SIZE = 40
+BLOCK_SIZE = 90
 
 SIZE = WIDTH, HEIGHT = 1280, 768
 
@@ -89,13 +96,22 @@ class Walker:
 
 class Tile:
 	def __init__(self, top_left, type_of_tile):
-		self.top_left = top_left
-		self.top_right = top_left[0] + 3 * BLOCK_SIZE, top_left[1] + 2 * BLOCK_SIZE
-		self.bottom_left = top_left[0] - 3 * BLOCK_SIZE, top_left[1] + 2 * BLOCK_SIZE
-		self.bottom_right = top_left[0], top_left[1] + 4 * BLOCK_SIZE
-		self.sprite_point = self.bottom_left[0], self.bottom_left[1] - BLOCK_SIZE * 4
+		self.top_left = top_left[0] - VIEW_X, top_left[1] - VIEW_Y
+		self.top_right = top_left[0] + 3 * BLOCK_SIZE - VIEW_X, top_left[1] + 2 * BLOCK_SIZE - VIEW_Y
+		self.bottom_left = top_left[0] - 3 * BLOCK_SIZE - VIEW_X, top_left[1] + 2 * BLOCK_SIZE - VIEW_Y
+		self.bottom_right = top_left[0] - VIEW_X, top_left[1] + 4 * BLOCK_SIZE - VIEW_Y
+		self.sprite_point = self.bottom_left[0] - VIEW_X, self.bottom_left[1] - BLOCK_SIZE * 4 - VIEW_Y
+		self.type_of_tile = type_of_tile
 		self.image, self.rectangle = find_image(type_of_tile)
 		self.color = (100, 100, 255)
+
+	def update(self, top_left):
+		self.top_left = top_left[0] - VIEW_X, top_left[1] - VIEW_Y
+		self.top_right = top_left[0] + 3 * BLOCK_SIZE - VIEW_X, top_left[1] + 2 * BLOCK_SIZE - VIEW_Y
+		self.bottom_left = top_left[0] - 3 * BLOCK_SIZE - VIEW_X, top_left[1] + 2 * BLOCK_SIZE - VIEW_Y
+		self.bottom_right = top_left[0] - VIEW_X, top_left[1] + 4 * BLOCK_SIZE - VIEW_Y
+		self.sprite_point = self.bottom_left[0] - VIEW_X, self.bottom_left[1] - BLOCK_SIZE * 4 - VIEW_Y
+		self.image, self.rectangle = find_image(self.type_of_tile)
 
 	def draw_sprite(self):
 		self.rectangle.x = self.sprite_point[0]
@@ -156,31 +172,93 @@ class AdvancedTile:
 		self.bottom_tile.draw_sprite()
 
 
+def zoom_in():
+	global BLOCK_SIZE
+	if BLOCK_SIZE + 15 <= 95:
+		BLOCK_SIZE += 15
+		my_map.draw_on_screen()
+
+
+def zoom_out():
+	global BLOCK_SIZE
+	if BLOCK_SIZE - 15 >= 30:
+		BLOCK_SIZE -= 15
+		my_map.draw_on_screen()
+
+
 class Map:
 	def __init__(self, map_table):
+		self.tile_table = None
 		self.map_table = map_table
-		self.tile_table = self.update_table()
+		self.update_table()
 
 	def update_table(self):
-		tile_tab = []
-		for i, line in enumerate(self.map_table):
-			tile_line = []
-			if i % 2 == 0:
-				x_offset = 3 * BLOCK_SIZE
-			else:
-				x_offset = 0
-			for j, elem in enumerate(line):
-				tile_line.append(Tile(((j * 6 * BLOCK_SIZE) + x_offset, i * 2 * BLOCK_SIZE), elem))
-			tile_tab.append(tile_line)
-		return tile_tab
+		global BLOCK_SIZE
+		if self.tile_table is not None and self.tile_table != [[]]:
+			for i, line in enumerate(self.tile_table):
+				if i % 2 == 0:
+					x_offset = 3 * BLOCK_SIZE
+				else:
+					x_offset = 0
+				for j, elem in enumerate(line):
+					line[j].update(((j * 6 * BLOCK_SIZE) + x_offset, i * 2 * BLOCK_SIZE))
+		else:
+			tile_tab = []
+			for i, line in enumerate(self.map_table):
+				tile_line = []
+				if i % 2 == 0:
+					x_offset = 3 * BLOCK_SIZE
+				else:
+					x_offset = 0
+				for j, elem in enumerate(line):
+					tile_line.append(Tile(((j * 6 * BLOCK_SIZE) + x_offset, i * 2 * BLOCK_SIZE), elem))
+				tile_tab.append(tile_line)
+			self.tile_table = tile_tab
 
 	def draw_on_screen(self):
-		SCREEN.fill((72, 255, 59))
-		self.tile_table = self.update_table()
+		SCREEN.fill(BACKGROUND_COLOR)
+		self.update_table()
 		for line in self.tile_table:
 			for tile in line:
-				tile.draw_sprite()
+				if tile.top_left[1] <= HEIGHT and \
+						tile.bottom_left[0] <= WIDTH and \
+						tile.bottom_right[1] >= 0 and \
+						tile.top_right[0] >= 0:
+					tile.draw_sprite()
 
+
+def move_up():
+	global VIEW_Y
+	VIEW_Y -= 10
+	my_map.draw_on_screen()
+
+
+def move_left():
+	global VIEW_X
+	VIEW_X -= 10
+	my_map.draw_on_screen()
+
+
+def move_down():
+	global VIEW_Y
+	VIEW_Y += 10
+	my_map.draw_on_screen()
+
+
+def move_right():
+	global VIEW_X
+	VIEW_X += 10
+	my_map.draw_on_screen()
+
+
+key_behaviour = {
+	pygame.K_e: zoom_in,
+	pygame.K_q: zoom_out,
+	pygame.K_w: move_up,
+	pygame.K_a: move_left,
+	pygame.K_s: move_down,
+	pygame.K_d: move_right
+}
 
 if __name__ in "__main__":
 	clock = pygame.time.Clock()
@@ -205,10 +283,17 @@ if __name__ in "__main__":
 	                    [GRASS, GRASS, GRASS, GRASS, ROAD, GRASS, GRASS],
 	                    [GRASS, GRASS, GRASS, GRASS, ROAD, GRASS, GRASS],
 	                    [GRASS, GRASS, GRASS, GRASS, GRASS, GRASS, GRASS]]
+	my_map.draw_on_screen()
 	while True:
-		clock.tick(30)
+		clock.tick(UPDATES_PER_SEC)
 		for event in pygame.event.get():
+			if event.type != pygame.QUIT and event.type != pygame.KEYDOWN:
+				continue
 			if event.type == pygame.QUIT:
 				sys.exit()
-		my_map.draw_on_screen()
+			if event.type == pygame.KEYDOWN:
+				if event.key in key_behaviour.keys():
+					key_behaviour[event.key]()
+
 		pygame.display.flip()
+		print(clock.get_fps())
